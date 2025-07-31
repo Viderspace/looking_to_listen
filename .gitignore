@@ -18,6 +18,7 @@ logs/
 runs/
 test_runs/
 checkpoints/
+test_scripts/
 
 # TensorBoard event files
 events.out.tfevents.*
