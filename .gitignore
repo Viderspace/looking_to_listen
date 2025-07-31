@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+env/
+
+# IDE/editor folders
+.idea/
+*.iml
+.vscode/
+
+# Logs and experiment outputs
+logs/
+runs/
+test_runs/
+checkpoints/
+
+# TensorBoard event files
+events.out.tfevents.*
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large generated assets
+separation_visualization.png
+
+# Colab mount points (if you ever mount Drive)
+drive/
