@@ -88,7 +88,6 @@ class Trainer:
         self.model.train()
         epoch_loss = 0
         num_batches = 0
-        accumulation_steps = self.config.get('accumulation_steps', 1)
 
         pbar = tqdm(self.train_loader, desc=f'Epoch {epoch}')
         for batch_idx, batch in enumerate(pbar):
@@ -99,35 +98,32 @@ class Trainer:
                 face = batch['face'].to(self.device)
 
                 # Forward pass
+                self.optimizer.zero_grad()
                 masks = self.model(mixture, face)
                 separated = mixture * masks
 
-                # Compute loss and scale by accumulation steps
-                loss = self.criterion(separated, clean) / accumulation_steps
+                # Compute loss
+                loss = self.criterion(separated, clean)
 
                 # Backward pass
                 loss.backward()
 
-                # Only step optimizer after accumulation_steps
-                if (batch_idx + 1) % accumulation_steps == 0:
-                    # Gradient clipping for stability
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
+                # Gradient clipping for stability
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
 
-                    self.optimizer.step()
-                    self.optimizer.zero_grad()
+                self.optimizer.step()
 
-                # Logging (use unscaled loss for display)
-                actual_loss = loss.item() * accumulation_steps
-                epoch_loss += actual_loss
+                # Logging
+                epoch_loss += loss.item()
                 num_batches += 1
                 self.global_step += 1
 
                 # Update progress bar
-                pbar.set_postfix({'loss': f'{actual_loss:.4f}'})
+                pbar.set_postfix({'loss': f'{loss.item():.4f}'})
 
                 # Log to tensorboard every N steps
                 if self.global_step % self.config['log_interval'] == 0:
-                    self.writer.add_scalar('train/loss', actual_loss, self.global_step)
+                    self.writer.add_scalar('train/loss', loss.item(), self.global_step)
                     self.writer.add_scalar('train/learning_rate',
                                            self.optimizer.param_groups[0]['lr'],
                                            self.global_step)
@@ -147,12 +143,6 @@ class Trainer:
                 if 'sample_id' in batch:
                     print(f"Sample IDs: {batch['sample_id']}")
                 continue
-
-        # Final optimizer step if we have residual gradients
-        if num_batches % accumulation_steps != 0:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
-            self.optimizer.step()
-            self.optimizer.zero_grad()
 
         return epoch_loss / num_batches if num_batches > 0 else float('inf')
 
