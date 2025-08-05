@@ -128,11 +128,6 @@ class Trainer:
                                            self.optimizer.param_groups[0]['lr'],
                                            self.global_step)
 
-                # Save checkpoint at intervals
-                if self.global_step % self.config['save_interval'] == 0:
-                    avg_loss = epoch_loss / num_batches
-                    self.save_checkpoint(epoch, avg_loss, is_interval=True)
-
             except Exception as e:
                 print(f"\nError processing batch {batch_idx}: {e}")
                 if 'sample_id' in batch:
@@ -141,7 +136,7 @@ class Trainer:
 
         return epoch_loss / num_batches if num_batches > 0 else float('inf')
 
-    def save_checkpoint(self, epoch, loss, is_interval=False):
+    def save_checkpoint(self, epoch, loss):
         checkpoint = {
                 'epoch'               : epoch,
                 'model_state_dict'    : self.model.state_dict(),
@@ -151,17 +146,10 @@ class Trainer:
                 'global_step'         : self.global_step
         }
 
-        # Save both interval and epoch checkpoints
-        if is_interval:
-            checkpoint_path = os.path.join(
-                    self.config['checkpoint_dir'],
-                    f'checkpoint_step_{self.global_step}.pt'
-            )
-        else:
-            checkpoint_path = os.path.join(
-                    self.config['checkpoint_dir'],
-                    f'checkpoint_epoch_{epoch}.pt'
-            )
+        checkpoint_path = os.path.join(
+                self.config['checkpoint_dir'],
+                f'checkpoint_epoch_{epoch}.pt'
+        )
 
         torch.save(checkpoint, checkpoint_path)
         print(f"\nSaved checkpoint: {checkpoint_path}")
@@ -181,8 +169,9 @@ class Trainer:
 
             print(f"\nEpoch {epoch} - Average Loss: {avg_loss:.4f}")
 
-            # Save checkpoint at end of epoch
-            self.save_checkpoint(epoch, avg_loss, is_interval=False)
+            # Save checkpoint based on save_interval (every N epochs)
+            if epoch % self.config['save_interval'] == 0:
+                self.save_checkpoint(epoch, avg_loss)
 
             # Flush tensorboard
             self.writer.flush()
