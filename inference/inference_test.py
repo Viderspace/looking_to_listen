@@ -13,6 +13,7 @@ import sys
 from tqdm import tqdm
 import soundfile as sf
 
+
 # Add your model path
 sys.path.append('/Users/jonatanvider/Documents/LookingToListenProject/avspeech_model/model')
 from model.av_model import AudioVisualModel
@@ -398,7 +399,7 @@ def main():
     parser = argparse.ArgumentParser(description='Test Looking to Listen model on preprocessed embeddings')
     parser.add_argument('--checkpoint', required=True, help='Path to model checkpoint')
     parser.add_argument('--embeddings', required=True, help='Path to preprocessed embeddings folder')
-    parser.add_argument('--output', default='./inference_results', help='Output directory')
+    parser.add_argument('--output', default='./inference_results_60k_20epochs', help='Output directory')
     parser.add_argument('--debug-compression', action='store_true', help='Run compression/decompression debug test')
 
     args = parser.parse_args()

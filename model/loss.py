@@ -1,5 +1,4 @@
 # loss.py
-import torch
 import torch.nn as nn
 
 
@@ -14,10 +13,8 @@ class ComplexCompressedLoss(nn.Module):
     def forward(self, separated, target):
         """
         Args:
-            separated: [batch, 257, 298, 2] - Separated compressed complex STFT
-            target: [batch, 257, 298, 2] - Clean target compressed complex STFT
-
-        Both are already power-law compressed!
+            separated: [batch, 257, 298, 2] - Separated compressed complex STFT - With mask applied
+            target: [batch, 257, 298, 2] - Clean target compressed complex STFT - Ground truth (Original STFT)
 
         Returns:
             Scalar loss value
@@ -25,3 +22,4 @@ class ComplexCompressedLoss(nn.Module):
         # L2 loss directly on compressed complex values
         loss = nn.functional.mse_loss(separated, target)
         return loss
+

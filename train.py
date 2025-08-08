@@ -4,8 +4,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 import os
 from datetime import datetime
-from torch.utils.data import DataLoader
-
 from model.av_model import AudioVisualModel
 from utils.dataset import create_dataloader
 from model.loss import ComplexCompressedLoss
@@ -35,34 +33,13 @@ class Trainer:
                 lr=config['learning_rate']
         )
 
-        # Create dataloaders - check if using GCS or local
-        if 'gcs_helper' in config and config.get('use_gcs', False):
-            print("Using GCS-aware dataloader...")
-            # Import and use GCS dataset
-            from utils.gcs_dataset import GCSAVSpeechDataset
 
-            train_dataset = GCSAVSpeechDataset(
-                    sample_list=config['sample_list'],
-                    gcs_helper=config['gcs_helper']
-            )
-
-            self.train_loader = DataLoader(
-                    train_dataset,
-                    batch_size=config['batch_size'],
-                    shuffle=True,
-                    num_workers=config['num_workers'],
-                    pin_memory=True,
-                    persistent_workers=True if config['num_workers'] > 0 else False
-            )
-        else:
-            print("Using local file dataloader...")
-            self.train_loader = create_dataloader(
-                    config['train_dir'],
-                    batch_size=config['batch_size'],
-                    shuffle=True,
-                    num_workers=config['num_workers']
-            )
-
+        self.train_loader = create_dataloader(
+                config['train_dir'],
+                batch_size=config['batch_size'],
+                shuffle=True,
+                num_workers=config['num_workers']
+        )
         # Logging
         self.writer = SummaryWriter(config['log_dir'])
         self.global_step = 0
@@ -224,7 +201,16 @@ class Trainer:
         print(f"  Device: {self.device}")
 
     def profile_forward_pass(self):
-        """Profile each component of the forward pass"""
+        """
+        In order to detect bottlenecks in the forward pass,
+        Profile each component of the forward pass.
+
+        CURRENT SITUATION: ~ 1.28 iterations per second on a batch size of 32 running on an A100 (In Colab Notebook).
+        Which is not bad at all!
+
+        The greatest bottleneck is in the Audio CNN, which calculates 15 layers of 2d convolutions.
+        Pitfalls are: I/O's in Colab, which are solved by pre-staging the data in RAM.
+        """
         import time
 
         self.model.eval()

@@ -1,0 +1,101 @@
+/content/looking_to_listen
+Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount("/content/drive", force_remount=True).
+✓ PyTorch 2.6.0+cu124
+✓ CUDA available: True
+GPU: NVIDIA A100-SXM4-40GB
+✓ Local dataset ready: 60548 samples at /content/dataset
+
+Configuration:
+  use_gcs: False
+  train_dir: /content/dataset
+  batch_size: 32
+  learning_rate: 0.0003
+  num_epochs: 20
+  num_workers: 2
+  log_interval: 50
+  save_interval: 5
+  log_dir: /content/drive/MyDrive/looking_to_listen/runs/local_20250805_135349
+  checkpoint_dir: /content/drive/MyDrive/looking_to_listen/checkpoints
+
+🚀 Initializing trainer…
+Using device: cuda
+Using local file dataloader...
+Found 60548 samples in /content/dataset
+✓ Trainer initialized
+Total batches per epoch: 1893
+
+🎯 Starting training from local dataset…
+============================================================
+Starting training for 20 epochs
+Total batches per epoch: 1893
+Starting from epoch: 1
+Epoch 1: 100%|██████████| 1893/1893 [24:36<00:00,  1.28it/s, loss=0.0403]
+Epoch 1 - Average Loss: 0.0562
+
+Epoch 2: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0419]
+Epoch 2 - Average Loss: 0.0506
+
+Epoch 3: 100%|██████████| 1893/1893 [24:37<00:00,  1.28it/s, loss=0.0454]
+Epoch 3 - Average Loss: 0.0489
+
+Epoch 4: 100%|██████████| 1893/1893 [24:36<00:00,  1.28it/s, loss=0.0533]
+Epoch 4 - Average Loss: 0.0478
+
+Epoch 5: 100%|██████████| 1893/1893 [24:36<00:00,  1.28it/s, loss=0.0269]
+Epoch 5 - Average Loss: 0.0471
+
+Saved checkpoint: /content/drive/MyDrive/looking_to_listen/checkpoints/checkpoint_epoch_5.pt
+
+Epoch 6: 100%|██████████| 1893/1893 [24:34<00:00,  1.28it/s, loss=0.0812]
+Epoch 6 - Average Loss: 0.0464
+
+Epoch 7: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0309]
+Epoch 7 - Average Loss: 0.0458
+
+Epoch 8: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0427]
+Epoch 8 - Average Loss: 0.0454
+
+Epoch 9: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0787]
+Epoch 9 - Average Loss: 0.0449
+
+Epoch 10: 100%|██████████| 1893/1893 [24:36<00:00,  1.28it/s, loss=0.0607]
+Epoch 10 - Average Loss: 0.0447
+
+Saved checkpoint: /content/drive/MyDrive/looking_to_listen/checkpoints/checkpoint_epoch_10.pt
+
+Epoch 11: 100%|██████████| 1893/1893 [24:34<00:00,  1.28it/s, loss=0.0706]
+Epoch 11 - Average Loss: 0.0443
+
+Epoch 12: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0518]
+Epoch 12 - Average Loss: 0.0440
+
+Epoch 13: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0557]
+Epoch 13 - Average Loss: 0.0438
+
+Epoch 14: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0610]
+Epoch 14 - Average Loss: 0.0435
+
+Epoch 15: 100%|██████████| 1893/1893 [24:33<00:00,  1.28it/s, loss=0.0281]
+Epoch 15 - Average Loss: 0.0434
+
+Saved checkpoint: /content/drive/MyDrive/looking_to_listen/checkpoints/checkpoint_epoch_15.pt
+
+Epoch 16: 100%|██████████| 1893/1893 [24:34<00:00,  1.28it/s, loss=0.0374]
+Epoch 16 - Average Loss: 0.0432
+
+Epoch 17: 100%|██████████| 1893/1893 [24:34<00:00,  1.28it/s, loss=0.0650]
+Epoch 17 - Average Loss: 0.0430
+
+Epoch 18: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0285]
+Epoch 18 - Average Loss: 0.0428
+
+Epoch 19: 100%|██████████| 1893/1893 [24:34<00:00,  1.28it/s, loss=0.0368]
+Epoch 19 - Average Loss: 0.0427
+
+Epoch 20: 100%|██████████| 1893/1893 [24:35<00:00,  1.28it/s, loss=0.0729]
+Epoch 20 - Average Loss: 0.0427
+
+Saved checkpoint: /content/drive/MyDrive/looking_to_listen/checkpoints/checkpoint_epoch_20.pt
+Training completed!
+
+✓ Training completed. Checkpoints/logs saved to Drive.
