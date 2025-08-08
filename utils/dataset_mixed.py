@@ -1,71 +1,27 @@
-# dataset_mixed.py
+
 import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import numpy as np
 import tarfile
-import shutil
-
-
-def extract_dataset(gcs_path, local_path, colab_env=True):
-    """
-    Download and extract dataset from GCS to local storage
-
-    Args:
-        gcs_path: GCS path like 'gs://bucket/file.tar.gz'
-        local_path: Local extraction path
-        colab_env: Whether running in Colab
-    """
-    if colab_env:
-        # In Colab, use gsutil to copy
-        tar_name = os.path.basename(gcs_path)
-        local_tar = f"/tmp/{tar_name}"
-
-        print(f"📥 Downloading {gcs_path}...")
-        os.system(f"gsutil -m cp {gcs_path} {local_tar}")
-
-        print(f"📦 Extracting to {local_path}...")
-        os.makedirs(local_path, exist_ok=True)
-
-        with tarfile.open(local_tar, 'r:gz') as tar:
-            tar.extractall(local_path)
-
-        # Clean up tar file
-        os.remove(local_tar)
-
-        # Find the actual data directory (might be nested)
-        extracted_dirs = [d for d in Path(local_path).iterdir() if d.is_dir()]
-        if len(extracted_dirs) == 1:
-            # Data is probably in a subdirectory
-            actual_data_path = extracted_dirs[0]
-        else:
-            actual_data_path = local_path
-
-        print(f"✅ Extracted to {actual_data_path}")
-        return actual_data_path
-    else:
-        # For local testing, assume data is already extracted
-        return local_path
 
 
 class PreStagingManager:
     """
-    Manages pre-staging of all datasets for mixed training
+    Simplified version for Colab - uses ! commands directly
     """
 
-    def __init__(self, use_colab=True, local_base_dir="/content/datasets"):
-        self.use_colab = use_colab
+    def __init__(self, local_base_dir="/content/datasets"):
         self.local_base_dir = local_base_dir
         self.paths = {}
 
     def prepare_all_datasets(self, warm_start=False):
         """
-        Pre-stage all three datasets
-
-        Args:
-            warm_start: If True, only load 2S datasets (for initial fine-tuning)
+        Pre-stage all three datasets using Colab's ! commands
         """
+        import subprocess
+
         os.makedirs(self.local_base_dir, exist_ok=True)
 
         # Dataset configurations
@@ -81,7 +37,7 @@ class PreStagingManager:
                         'skip_warm_start': False
                 },
                 '2s_noise': {
-                        'gcs'            : 'gs://av_speech_2s_clean_14k/2s_noise.tar.gz',  # Note: same bucket
+                        'gcs'            : 'gs://av_speech_2s_clean_14k/2s_noise.tar.gz',
                         'local'          : f'{self.local_base_dir}/2s_noise',
                         'skip_warm_start': False
                 }
@@ -93,25 +49,70 @@ class PreStagingManager:
                 continue
 
             # Check if already extracted
-            if os.path.exists(config['local']) and len(list(Path(config['local']).iterdir())) > 0:
+            if os.path.exists(config['local']) and any(Path(config['local']).iterdir()):
                 print(f"✓ {name} already extracted at {config['local']}")
                 self.paths[name] = config['local']
+                continue
+
+            # Download and extract
+            print(f"\n{'=' * 60}")
+            print(f"Processing {name}")
+            print('=' * 60)
+
+            tar_name = os.path.basename(config['gcs'])
+            tar_path = f"/content/{tar_name}"  # Download to /content instead of /tmp
+
+            # Download using gsutil
+            print(f"📥 Downloading from {config['gcs']}...")
+            cmd = f"gsutil -m cp {config['gcs']} {tar_path}"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"❌ Error: {result.stderr}")
+                raise RuntimeError(f"Failed to download {name}")
+
+            # Check file size
+            if os.path.exists(tar_path):
+                size_mb = os.path.getsize(tar_path) / (1024 * 1024)
+                print(f"✓ Downloaded {tar_name} ({size_mb:.1f} MB)")
             else:
-                self.paths[name] = extract_dataset(
-                        config['gcs'],
-                        config['local'],
-                        self.use_colab
-                )
+                raise FileNotFoundError(f"Download failed - {tar_path} not found")
+
+            # Extract
+            print(f"📦 Extracting to {config['local']}...")
+            os.makedirs(config['local'], exist_ok=True)
+
+            with tarfile.open(tar_path, 'r:gz') as tar:
+                tar.extractall(config['local'])
+
+            # Clean up tar
+            os.remove(tar_path)
+            print(f"🗑️ Removed {tar_path}")
+
+            # Find actual data path
+            extracted_items = list(Path(config['local']).iterdir())
+            if len(extracted_items) == 1 and extracted_items[0].is_dir():
+                # Check if this is a wrapper directory
+                potential_samples = list(extracted_items[0].iterdir())
+                if potential_samples and (potential_samples[0] / 'audio').exists():
+                    actual_path = str(extracted_items[0])
+                    print(f"📂 Data found in subdirectory: {actual_path}")
+                else:
+                    actual_path = config['local']
+            else:
+                actual_path = config['local']
+
+            # Verify
+            sample_count = len([d for d in Path(actual_path).iterdir() if d.is_dir()])
+            print(f"✅ {name}: {sample_count} samples ready at {actual_path}")
+
+            self.paths[name] = actual_path
 
         return self.paths
 
-    def cleanup(self):
-        """Clean up local staged data to free space"""
-        if self.use_colab:
-            print("🧹 Cleaning up staged datasets...")
-            shutil.rmtree(self.local_base_dir, ignore_errors=True)
 
 
+# ... rest of the code remains the same
 # Keep the same dataset classes from before, but with minor modification
 class AVSpeechDataset1SNoise(Dataset):
     """Original 1 speaker + noise dataset"""
